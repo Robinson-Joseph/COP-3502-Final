@@ -250,11 +250,3 @@ def generate_sudoku(size:int, removed:int) -> list[list[int]]:
     sudoku.print_board() # Added by me.
     board = sudoku.get_board()
     return board
-
-def main():
-    board = generate_sudoku(9,30)
-    
-
-
-if __name__ == "__main__":
-    main()
