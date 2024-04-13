@@ -245,8 +245,7 @@ def generate_sudoku(size:int, removed:int) -> list[list[int]]:
     """
     sudoku = SudokuGenerator(size, removed)
     sudoku.fill_values()
-    board = sudoku.get_board() # literally overwritten 2 lines later.
+    board = sudoku.get_board() # literally overwritten 2 lines later. - Joseph
     sudoku.remove_cells()
-    sudoku.print_board() # Added by me.
     board = sudoku.get_board()
-    return board # function description incorrect, this only returns the unsolved board.
+    return board # function description incorrect, this only returns the unsolved board. - Joseph
