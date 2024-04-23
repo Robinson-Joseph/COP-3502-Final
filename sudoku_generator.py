@@ -268,27 +268,41 @@ def draw_game_start(screen):
     #Title draw and init
     titleSurface = startTitleFont.render("Sudoku", 0, LINE_COLOR)
     titleRectangle = titleSurface.get_rect(
-        center=(WIDTH//2, HEIGHT//2 - 150))
+        center=(WIDTH//2, HEIGHT//2 - 180/600*HEIGHT))
     screen.blit(titleSurface, titleRectangle)
 
     #Buttons init
 
-    startText = buttonFont.render("Start", 0, (0, 0, 0))
+    easyText = buttonFont.render("Easy", 0, (24, 122, 53))
+    mediumText = buttonFont.render("Medium", 0, (184, 171, 32))
+    hardText = buttonFont.render("Hard", 0, (143, 22, 22))
     quitText = buttonFont.render("Quit", 0, (0, 0, 0))
 
-    startSurface = pygame.Surface((startText.get_size()[0]+20, startText.get_size()[1]+20))
-    startSurface.fill(LINE_COLOR)
-    startSurface.blit(startText, (10, 10))
+    easySurface = pygame.Surface((easyText.get_size()[0]+20, easyText.get_size()[1]+20))
+    easySurface.fill(LINE_COLOR)
+    easySurface.blit(easyText, (10, 10))
+    mediumSurface = pygame.Surface((mediumText.get_size()[0]+20, mediumText.get_size()[1]+20))
+    mediumSurface.fill(LINE_COLOR)
+    mediumSurface.blit(mediumText, (10, 10))
+    hardSurface = pygame.Surface((hardText.get_size()[0]+20, hardText.get_size()[1]+20))
+    hardSurface.fill(LINE_COLOR)
+    hardSurface.blit(hardText, (10, 10))
     quitSurface = pygame.Surface((quitText.get_size()[0]+20, quitText.get_size()[1]+20))
     quitSurface.fill(LINE_COLOR)
     quitSurface.blit(quitText, (10, 10))
 
-    startRectangle = startSurface.get_rect(
-        center=(WIDTH//2, HEIGHT//2+50))
+    easyRectangle = easySurface.get_rect(
+        center=(WIDTH//2, HEIGHT//2-50/600*HEIGHT))
+    mediumRectangle = easySurface.get_rect(
+        center=(WIDTH//2-(mediumText.get_size()[0]-easyText.get_size()[0])/2, HEIGHT//2+45/600*HEIGHT))
+    hardRectangle = easySurface.get_rect(
+        center=(WIDTH//2-(hardText.get_size()[0]-easyText.get_size()[0])/2, HEIGHT//2+140/600*HEIGHT))
     quitRectangle = quitSurface.get_rect(
-        center=(WIDTH//2, HEIGHT//2+150))
+        center=(WIDTH//2, HEIGHT//2+235/600*HEIGHT))
 
-    screen.blit(startSurface, startRectangle)
+    screen.blit(easySurface, easyRectangle)
+    screen.blit(mediumSurface, mediumRectangle)
+    screen.blit(hardSurface, hardRectangle)
     screen.blit(quitSurface, quitRectangle)
 
     while True:
@@ -297,8 +311,8 @@ def draw_game_start(screen):
                 pygame.display.quit() #for some reason, display.quit is necessary. sys.exit won't close the window, and doing so will crash.
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if startRectangle.collidepoint(event.pos): #if mouse is on start button and clicking
-                    return #goes back to main
+                if easyRectangle.collidepoint(event.pos): #if mouse is on start button and clicking
+                    return #goes back to 
                 elif quitRectangle.collidepoint(event.pos): #if mouse is on quit button and clicking
                     pygame.display.quit()
                     sys.exit() #take a wild guess
@@ -323,3 +337,4 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 pygame.display.quit()
                 sys.exit()
+            
