@@ -1,6 +1,8 @@
 # Joseph Robinson, 4/9/2024, generator for backend of sudoku game project.
 
 import random
+import pygame
+import sys
 
 
 class SudokuGenerator:
@@ -249,3 +251,69 @@ def generate_sudoku(size:int, removed:int) -> list[list[int]]:
     sudoku.remove_cells()
     board = sudoku.get_board()
     return board # function description incorrect, this only returns the unsolved board. - Joseph
+
+
+#Visual stuff starts here
+def draw_game_start(screen):
+    #Title Font init
+    startTitleFont = pygame.font.Font(None, 100)
+    buttonFont = pygame.font.Font(None, 70)
+    #Background Color
+    screen.fill(BG_COLOR)
+
+    #Title draw and init
+    titleSurface = startTitleFont.render("Sudoku", 0, LINE_COLOR)
+    titleRectangle = title_surface.get_rect(
+        center=(WIDTH//2, HEIGHT//2 - 150))
+    screen.blit(titleSurface, titleRectangle)
+
+    #Buttons init
+
+    startText = buttonFont.render("Start", 0, (255, 255, 255))
+    quitText = buttonFont.render("Quit", 0, (255, 255, 255))
+
+    startSurface = pygame.Surface((startText.get_size()[0]+20, startText.get_size()[1]+20))
+    startSurface.fill(LINE_COLOR)
+    startSurface.blit(startText, (10, 10))
+    quitSurface = pygame.Surface(quitText.get_size()[0]+20, quitText.get_size()[1]+20))
+    quitSurface.fill(LINE_COLOR)
+    quitSurface.blit(quitText, (10, 10))
+
+    startRectangle = startSurface.get_rect(
+        center=(WIDTH//2, HEIGHT//2+50))
+    quitRectangle = quitSurface.get_rect(
+        center=(WIDTH//2, HEIGHT//2+150))
+
+    screen.blit(startSurface, startRectangle)
+    screen.blit(quitSurface, quitRectangle
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if startRectangle.collidepoint(event.pos): #if mouse is on start button and clicking
+                    return #goes back to main
+                elif quitRectangle.collidepoint(event.pos): #if mouse is on quit button and clicking
+                    sys.exit() #take a wild guess
+        pygame.display.update()
+                
+    
+    
+#main here
+if __name__ == "__main__":
+    gameOver = False
+    pygame.init()
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("Sudoku")
+    
+    draw_game_start(screen)
+
+    screen.fill(BG_COLOR)
+    
+    #game part of main function
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            
