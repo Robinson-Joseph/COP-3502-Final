@@ -311,8 +311,12 @@ def draw_game_start(screen):
                 pygame.display.quit() #for some reason, display.quit is necessary. sys.exit won't close the window, and doing so will crash.
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if easyRectangle.collidepoint(event.pos): #if mouse is on start button and clicking
-                    return #goes back to 
+                if easyRectangle.collidepoint(event.pos): #if mouse is on easy button and clicking
+                    return 1 #goes back to main
+                elif mediumRectangle.collidepoint(event.pos): #medium select
+                    return 2
+                elif hardRectangle.collidepoint(event.pos): #hard select
+                    return 3
                 elif quitRectangle.collidepoint(event.pos): #if mouse is on quit button and clicking
                     pygame.display.quit()
                     sys.exit() #take a wild guess
@@ -327,8 +331,7 @@ if __name__ == "__main__":
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Sudoku")
     
-    draw_game_start(screen)
-
+    difficulty = draw_game_start(screen)
     screen.fill(BG_COLOR)
     
     #game part of main function
