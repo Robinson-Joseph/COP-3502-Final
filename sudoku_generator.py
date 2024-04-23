@@ -227,8 +227,6 @@ class SudokuGenerator:
 
 
 
-
-
 def generate_sudoku(size:int, removed:int) -> list[list[int]]:
     """
     DO NOT CHANGE
@@ -253,7 +251,13 @@ def generate_sudoku(size:int, removed:int) -> list[list[int]]:
     return board # function description incorrect, this only returns the unsolved board. - Joseph
 
 
-#Visual stuff starts here
+#Visual stuff starts 
+BG_COLOR = "black"
+LINE_COLOR = "white"
+WIDTH = 800
+HEIGHT = 600
+
+
 def draw_game_start(screen):
     #Title Font init
     startTitleFont = pygame.font.Font(None, 100)
@@ -263,19 +267,19 @@ def draw_game_start(screen):
 
     #Title draw and init
     titleSurface = startTitleFont.render("Sudoku", 0, LINE_COLOR)
-    titleRectangle = title_surface.get_rect(
+    titleRectangle = titleSurface.get_rect(
         center=(WIDTH//2, HEIGHT//2 - 150))
     screen.blit(titleSurface, titleRectangle)
 
     #Buttons init
 
-    startText = buttonFont.render("Start", 0, (255, 255, 255))
-    quitText = buttonFont.render("Quit", 0, (255, 255, 255))
+    startText = buttonFont.render("Start", 0, (0, 0, 0))
+    quitText = buttonFont.render("Quit", 0, (0, 0, 0))
 
     startSurface = pygame.Surface((startText.get_size()[0]+20, startText.get_size()[1]+20))
     startSurface.fill(LINE_COLOR)
     startSurface.blit(startText, (10, 10))
-    quitSurface = pygame.Surface(quitText.get_size()[0]+20, quitText.get_size()[1]+20))
+    quitSurface = pygame.Surface((quitText.get_size()[0]+20, quitText.get_size()[1]+20))
     quitSurface.fill(LINE_COLOR)
     quitSurface.blit(quitText, (10, 10))
 
@@ -285,16 +289,18 @@ def draw_game_start(screen):
         center=(WIDTH//2, HEIGHT//2+150))
 
     screen.blit(startSurface, startRectangle)
-    screen.blit(quitSurface, quitRectangle
+    screen.blit(quitSurface, quitRectangle)
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                pygame.display.quit() #for some reason, display.quit is necessary. sys.exit won't close the window, and doing so will crash.
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if startRectangle.collidepoint(event.pos): #if mouse is on start button and clicking
                     return #goes back to main
                 elif quitRectangle.collidepoint(event.pos): #if mouse is on quit button and clicking
+                    pygame.display.quit()
                     sys.exit() #take a wild guess
         pygame.display.update()
                 
@@ -315,5 +321,5 @@ if __name__ == "__main__":
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                pygame.display.quit()
                 sys.exit()
-            
