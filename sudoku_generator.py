@@ -224,9 +224,6 @@ class SudokuGenerator:
         return
 
 
-
-
-
 def generate_sudoku(size:int, removed:int) -> list[list[int]]:
     """
     DO NOT CHANGE
@@ -256,6 +253,9 @@ BG_COLOR = "black"
 LINE_COLOR = "white"
 WIDTH = 800
 HEIGHT = 600
+OUTER_BD_THICK = 15
+INNER_BD_THICK = 9
+cell_size = HEIGHT-4*OUTER_BD_THICK-6*INNER_BD_THICK
 
 
 def draw_game_start(screen):
@@ -321,27 +321,46 @@ def draw_game_start(screen):
                     pygame.display.quit()
                     sys.exit() #take a wild guess
         pygame.display.update()
-                
-    
-    
-#main here
-if __name__ == "__main__":
-    gameOver = False
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Sudoku")
-    
-    difficulty = draw_game_start(screen)
-    screen.fill(BG_COLOR)
-    
-    #game part of main function
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.display.quit()
-                sys.exit()
 
+#Cell Class
+class Cell:
+    def __init__(self, value, row, col, screen=None, mut=True):
+        self.value = value
+        self.row = row
+        self.col = col
+        self.screen = screen
+        self.mut = mut #mutability. Cells with pre-set or non-sketch values are immutable barring reset. Any cell may still be selected.
+        
+        
+    def set_cell_value(self, value):
+        self.value = value
+        self.mut = False
+        
+        
+    def set_sketched_value(self, value):
+        self.value = value
+        
+    def draw(self):
+        correction = OUTER_BD_THICK-INNER_BD_THICK #The difference between outer and inner borders. Math reasons.
+        leftBound = (self.row%9+1)*INNER_BD_THICK+(self.row%3+1)*correction+(self.row%9)*cell_size+1 #left boundary of a given cell, starting on first white space
+        rightBound = leftBound+cell_size-1 #same as above, on the right
+        upBound = (self.column%9+1)*INNER_BD_THICK+(self.column%3+1)*correction+(self.column%9)*cell_size+1 #upper bound
+        downBound = upBound+cell_size-1 #lower bound
+        sketchFont = pygame.font.Font(None, 5) #sketched number size, will be changed
+        cellFont = pygame.font.Font(None, 20) #submitted number size, will be changed
 
+        
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            pygame.draw.lines(screen, 'red', True, [(leftBound, upBound), (rightBound, upBound), (rightBound, downBound), (leftBound, downBound)]) #draws a red box on the boundary of the cell
+        if self.value != 0:
+            if self.mut == False:
+                text = cellFont.render(self.value, 0, LINE_COLOR) #the value of the cell, as text
+                screen.blit(text, (leftBound+cell_size/2, upBound+cell_size/2)) #places the text, in theory. Can't verify easily tbh. 
+            elif self.mut == True:
+                text = sketchFont.render(self.value, 0, LINE_COLOR) #the sketched value of the cell, as text
+                screen.blt(text, (leftBound+cell_size/12, upBound+cell_size/12)) #uh... this places the small version of the text, probably?    
+
+#Board Class
 class Board:
     # Constructor for the Board class to initialize the Sudoku board
     def __init__(self, rows, cols, width=800, height=600, screen=None, difficulty=None):
@@ -469,3 +488,22 @@ class Board:
 
         # Compare with the solution from SudokuGenerator
         return self.sudoku.solution == current_board
+
+
+#main here
+if __name__ == "__main__":
+    gameOver = False
+    pygame.init()
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("Sudoku")
+    
+    difficulty = draw_game_start(screen)
+    screen.fill(BG_COLOR)
+    
+    #game part of main function
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.display.quit()
+                sys.exit()
+
