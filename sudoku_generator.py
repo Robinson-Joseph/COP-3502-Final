@@ -355,10 +355,16 @@ class Cell:
         if self.value != 0:
             if self.mut == False:
                 text = cellFont.render(self.value, 0, LINE_COLOR) #the value of the cell, as text
-                screen.blit(text, (leftBound+cell_size/2, upBound+cell_size/2)) #places the text, in theory. Can't verify easily tbh. 
+                surface = pygame.Surface((cell_size, cell_size)) #creates a square to cover the old digits
+                surface.fill(BG_COLOR) #makes it black
+                surface.blit(text, (leftBound+cell_size/2, upBound+cell_size/2)) #places the text onto a black square (the cell)
+                screen.blit(surface, (leftBound+cell_size/2, upBound+cell_size/2)) #places the text, in theory. Can't verify easily tbh. 
             elif self.mut == True:
                 text = sketchFont.render(self.value, 0, LINE_COLOR) #the sketched value of the cell, as text
-                screen.blt(text, (leftBound+cell_size/12, upBound+cell_size/12)) #uh... this places the small version of the text, probably?    
+                surface = pygame.Surface((cell_size, cell_size)) #creates a square to cover the old digits
+                surface.fill(BG_COLOR) #makes it black
+                surface.blit(text, (leftBound+cell_size/12, upBound+cell_size/12)) #places the text onto a black square (the cell) This is small and on the upper left, ideally
+                screen.blt(text, (leftBound+cell_size/2, upBound+cell_size/2)) #places the text 
 
 #Board Class
 class Board:
