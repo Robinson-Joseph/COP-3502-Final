@@ -340,4 +340,132 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 pygame.display.quit()
                 sys.exit()
-            
+
+
+class Board:
+    # Constructor for the Board class to initialize the Sudoku board
+    def __init__(self, rows, cols, width=800, height=600, screen=None, difficulty=None):
+        self.row = 0
+        self.col = 0
+        self.rows = rows
+        self.cols = cols
+        self.width = width
+        self.height = height
+        self.screen = screen  # The PyGame window to draw on
+        self.difficulty = difficulty  # Difficulty level for the Sudoku puzzle
+
+        # Create and set up the Sudoku board
+        self.sudoku = SudokuGenerator(removed_cells=difficulty)
+        self.sudoku.fill_values()  # Fill the Sudoku with complete numbers
+        self.sudoku.remove_cells()  # Remove cells to create a puzzle
+
+        # Get the underlying 2D array representation of the board
+        self.board = self.sudoku.get_board()
+
+        # Calculate the cell size based on the grid dimensions
+        cell_size = self.width // self.cols
+
+        # Create a 2D array of Cell objects for the board
+        self.cells = [
+            [Cell(self.board[i][j], i, j, cell_size, cell_size, screen) for j in range(cols)]
+            for i in range(rows)
+        ]
+
+    # Draws the Sudoku grid and its cells
+    # Draws an outline of the Sudoku grid and each cell on the board
+    def draw(self):
+        self.screen.fill(BG_COLOR)  # Fill the background
+
+        # Draw horizontal lines for the Sudoku grid
+        for i in range(10):
+            line_start = (0, i * cell_size)  # Start of the horizontal line
+            line_end = (self.width, i * cell_size)  # End of the horizontal line
+            # Thicker lines every third row to separate 3x3 subgrids
+            if i % 3 == 0:
+                pygame.draw.line(self.screen, black, line_start, line_end, 3)
+            else:
+                pygame.draw.line(self.screen, black, line_start, line_end, 1)
+
+        # Draw vertical lines for the Sudoku grid
+        for i in range(10):
+            line_start = (i * cell_size, 0)  # Start of the vertical line
+            line_end = (i * cell_size, self.height - cell_size)  # End of the vertical line
+            if i % 3 == 0:
+                pygame.draw.line(self.screen, black, line_start, line_end, 3)
+            else:
+                pygame.draw.line(self.screen, black, line_start, line_end, 1)
+
+        # Draw the cells on the Sudoku board
+        for i in range(cell_number):
+            for j in range(cell_number):
+                self.cells[i][j].draw()  # Draw each cell and its value
+
+    # Selects a specific cell on the board
+    def select(self, row, col):
+        # Update the selected row and column if the cell is empty
+        if self.board[row][col] == 0:
+            self.row = row
+            self.col = col
+
+    # Click detection to convert x, y coordinates to board indices
+    def click(self, x, y):
+        if y < cell_size * self.cols:
+            # Calculate row and column based on x, y
+            row = y // cell_size
+            col = x // cell_size
+            return row, col
+        return None
+
+    # Clears the value of the selected cell
+    def clear(self):
+        # Clear only if the cell isn't predefined
+        if self.board[self.row][self.col] == 0:
+            self.cells[self.row][self.col].set_cell_value(0)
+            self.cells[self.row][self.col].set_sketched_value(0)
+
+    # Sketches a value in the selected cell
+    def sketch(self, value):
+        self.cells[self.row][self.col].set_sketched_value(value)
+
+    # Sets the value of the selected cell
+    def place_number(self, value):
+        self.cells[self.row][self.col].set_cell_value(value)
+
+    # Resets the Sudoku board to its original state
+    def reset_to_original(self):
+        self.cells = [
+            [Cell(self.board[i][j], i, j, cell_size, cell_size, screen) for j in range(cols)]
+            for i in range(rows)
+        ]
+
+    # Checks if the Sudoku board is fully filled
+    def is_full(self):
+        # Return True if all cells have a non-zero value
+        for row in self.cells:
+            for cell in row:
+                if cell.value == 0:
+                    return False
+        return True
+
+    # Updates the underlying 2D Sudoku board with current cell values
+    def update_board(self):
+        # Synchronize the board with the cells' current values
+        for i in range(self.rows):
+            for j in range(self.cols):
+                self.board[i][j] = self.cells[i][j].value
+
+    # Finds the first empty cell on the Sudoku board
+    def find_empty(self):
+        for i in range(self.rows):
+            for j in range(self.cols):
+                if self.cells[i][j].value == 0:
+                    return (i, j)
+        return None
+
+    # Checks whether the Sudoku board is solved correctly
+    def check_board(self):
+        # Create a string representation of the current Sudoku board
+        current_board = ''.join(str(self.board[i][j]) for i in range(self.rows) for j in range(self.cols))
+
+        # Compare with the solution from SudokuGenerator
+        return self.sudoku.solution == current_board
