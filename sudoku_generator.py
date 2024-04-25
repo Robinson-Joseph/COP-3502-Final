@@ -3,6 +3,7 @@
 import random
 import pygame
 import sys
+import numpy as np
 
 
 class SudokuGenerator:
@@ -217,7 +218,7 @@ class SudokuGenerator:
         while count < self.removed_cells:
             rand_row = random.randint(1,self.row_length-1)
             rand_col = random.randint(1, self.row_length-1)
-            print(f"Removing cell at {rand_row}, {rand_col} value: {self.board[rand_row][rand_col]}")
+            #print(f"Removing cell at {rand_row}, {rand_col} value: {self.board[rand_row][rand_col]}")
             if self.board[rand_row][rand_col] != 0:
                 self.board[rand_row][rand_col] = 0
                 count += 1
@@ -249,13 +250,15 @@ def generate_sudoku(size:int, removed:int) -> list[list[int]]:
 
 
 #Visual stuff starts 
+#These are globals. Do not modify unless necessary.
 BG_COLOR = "black"
 LINE_COLOR = "white"
 WIDTH = 800
 HEIGHT = 600
 OUTER_BD_THICK = 15
 INNER_BD_THICK = 9
-cell_size = HEIGHT-4*OUTER_BD_THICK-6*INNER_BD_THICK
+SIZE = 9 #size of the sudoku game
+cell_size = (HEIGHT-4*OUTER_BD_THICK-6*INNER_BD_THICK)/9
 
 
 def draw_game_start(screen):
@@ -312,11 +315,11 @@ def draw_game_start(screen):
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if easyRectangle.collidepoint(event.pos): #if mouse is on easy button and clicking
-                    return 1 #goes back to main
+                    return 30 #goes back to main
                 elif mediumRectangle.collidepoint(event.pos): #medium select
-                    return 2
+                    return 40
                 elif hardRectangle.collidepoint(event.pos): #hard select
-                    return 3
+                    return 50
                 elif quitRectangle.collidepoint(event.pos): #if mouse is on quit button and clicking
                     pygame.display.quit()
                     sys.exit() #take a wild guess
@@ -344,32 +347,34 @@ class Cell:
         correction = OUTER_BD_THICK-INNER_BD_THICK #The difference between outer and inner borders. Math reasons.
         leftBound = (self.row%9+1)*INNER_BD_THICK+(self.row%3+1)*correction+(self.row%9)*cell_size+1 #left boundary of a given cell, starting on first white space
         rightBound = leftBound+cell_size-1 #same as above, on the right
-        upBound = (self.column%9+1)*INNER_BD_THICK+(self.column%3+1)*correction+(self.column%9)*cell_size+1 #upper bound
+        upBound = (self.col%9+1)*INNER_BD_THICK+(self.col%3+1)*correction+(self.col%9)*cell_size+1 #upper bound
         downBound = upBound+cell_size-1 #lower bound
-        sketchFont = pygame.font.Font(None, 5) #sketched number size, will be changed
-        cellFont = pygame.font.Font(None, 20) #submitted number size, will be changed
-
+        sketchFont = pygame.font.Font(None, 30) #sketched number size, will be changed
+        cellFont = pygame.font.Font(None, 50) #submitted number size, will be changed
         
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            pygame.draw.lines(screen, 'red', True, [(leftBound, upBound), (rightBound, upBound), (rightBound, downBound), (leftBound, downBound)]) #draws a red box on the boundary of the cell
+        correction = OUTER_BD_THICK - INNER_BD_THICK
+        leftBound = correction*(self.row//3+1) + INNER_BD_THICK*(self.row+1) + cell_size*self.row
+        upBound = correction*(self.col//3+1) + INNER_BD_THICK*(self.col+1) + cell_size*self.col
+        # if event.type == pygame.MOUSEBUTTONDOWN:
+        #     pygame.draw.lines(screen, 'red', True, [(leftBound, upBound), (rightBound, upBound), (rightBound, downBound), (leftBound, downBound)]) #draws a red box on the boundary of the cell
         if self.value != 0:
             if self.mut == False:
-                text = cellFont.render(self.value, 0, LINE_COLOR) #the value of the cell, as text
+                text = cellFont.render(str(self.value), 0, LINE_COLOR) #the value of the cell, as text
                 surface = pygame.Surface((cell_size, cell_size)) #creates a square to cover the old digits
                 surface.fill(BG_COLOR) #makes it black
-                surface.blit(text, (leftBound+cell_size/2, upBound+cell_size/2)) #places the text onto a black square (the cell)
-                screen.blit(surface, (leftBound+cell_size/2, upBound+cell_size/2)) #places the text, in theory. Can't verify easily tbh. 
+                surface.blit(text, (cell_size/3, cell_size/4)) #places the text onto a black square (the cell)
+                self.screen.blit(surface, (leftBound, upBound)) #places the text, in theory. Can't verify easily tbh. 
             elif self.mut == True:
-                text = sketchFont.render(self.value, 0, LINE_COLOR) #the sketched value of the cell, as text
+                text = sketchFont.render(str(self.value), 0, LINE_COLOR) #the sketched value of the cell, as text
                 surface = pygame.Surface((cell_size, cell_size)) #creates a square to cover the old digits
                 surface.fill(BG_COLOR) #makes it black
-                surface.blit(text, (leftBound+cell_size/12, upBound+cell_size/12)) #places the text onto a black square (the cell) This is small and on the upper left, ideally
-                screen.blt(text, (leftBound+cell_size/2, upBound+cell_size/2)) #places the text 
+                surface.blit(text, (cell_size/2, cell_size/2)) #places the text onto a black square (the cell) This is small and on the upper left, ideally
+                self.screen.blit(text, (leftBound, upBound)) #places the text 
 
 #Board Class
 class Board:
     # Constructor for the Board class to initialize the Sudoku board
-    def __init__(self, rows, cols, width=800, height=600, screen=None, difficulty=None):
+    def __init__(self, rows, cols, width, height, screen, difficulty):
         self.row = 0
         self.col = 0
         self.rows = rows
@@ -380,7 +385,7 @@ class Board:
         self.difficulty = difficulty  # Difficulty level for the Sudoku puzzle
 
         # Create and set up the Sudoku board
-        self.sudoku = SudokuGenerator(removed_cells=difficulty)
+        self.sudoku = SudokuGenerator(SIZE, removed_cells=difficulty)
         self.sudoku.fill_values()  # Fill the Sudoku with complete numbers
         self.sudoku.remove_cells()  # Remove cells to create a puzzle
 
@@ -388,41 +393,64 @@ class Board:
         self.board = self.sudoku.get_board()
 
         # Calculate the cell size based on the grid dimensions
-        cell_size = self.width // self.cols
+        #cell_size = self.width // self.cols
 
         # Create a 2D array of Cell objects for the board
         self.cells = [
-            [Cell(self.board[i][j], i, j, cell_size, cell_size, screen) for j in range(cols)]
+            [Cell(self.board[i][j], i, j, screen) for j in range(cols)]
             for i in range(rows)
         ]
+        for i in range(self.rows):
+            for j in range(self.cols):
+                if self.cells[i][j].value == 0:
+                    self.cells[i][j].mut = True
+                else:
+                    self.cells[i][j].mut = False
 
     # Draws the Sudoku grid and its cells
     # Draws an outline of the Sudoku grid and each cell on the board
     def draw(self):
         self.screen.fill(BG_COLOR)  # Fill the background
-
+        
+        i = 0
+        j = OUTER_BD_THICK/2
+        
         # Draw horizontal lines for the Sudoku grid
-        for i in range(10):
-            line_start = (0, i * cell_size)  # Start of the horizontal line
-            line_end = (self.width, i * cell_size)  # End of the horizontal line
-            # Thicker lines every third row to separate 3x3 subgrids
-            if i % 3 == 0:
-                pygame.draw.line(self.screen, black, line_start, line_end, 3)
+        while j < HEIGHT:
+            lineStart = 0, j
+            lineEnd = HEIGHT-1, j
+            if i%3 == 0:
+                pygame.draw.line(self.screen, LINE_COLOR, lineStart, lineEnd, OUTER_BD_THICK)
+                j = j + cell_size + (OUTER_BD_THICK+INNER_BD_THICK)/2
+            elif i%3 == 1:
+                pygame.draw.line(self.screen, LINE_COLOR, lineStart, lineEnd, INNER_BD_THICK)
+                j = j + cell_size + INNER_BD_THICK
             else:
-                pygame.draw.line(self.screen, black, line_start, line_end, 1)
-
+                pygame.draw.line(self.screen, LINE_COLOR, lineStart, lineEnd, INNER_BD_THICK)
+                j = j + cell_size + (OUTER_BD_THICK+INNER_BD_THICK)/2
+            i += 1
+            
+        i = 0
+        j = OUTER_BD_THICK/2
+        
         # Draw vertical lines for the Sudoku grid
-        for i in range(10):
-            line_start = (i * cell_size, 0)  # Start of the vertical line
-            line_end = (i * cell_size, self.height - cell_size)  # End of the vertical line
-            if i % 3 == 0:
-                pygame.draw.line(self.screen, black, line_start, line_end, 3)
+        while j < HEIGHT:
+            lineStart = j, 0
+            lineEnd = j, HEIGHT-1
+            if i%3 == 0:
+                pygame.draw.line(self.screen, LINE_COLOR, lineStart, lineEnd, OUTER_BD_THICK)
+                j = j + cell_size + (OUTER_BD_THICK+INNER_BD_THICK)/2
+            elif i%3 == 1:
+                pygame.draw.line(self.screen, LINE_COLOR, lineStart, lineEnd, INNER_BD_THICK)
+                j = j + cell_size + INNER_BD_THICK
             else:
-                pygame.draw.line(self.screen, black, line_start, line_end, 1)
+                pygame.draw.line(self.screen, LINE_COLOR, lineStart, lineEnd, INNER_BD_THICK)
+                j = j + cell_size + (OUTER_BD_THICK+INNER_BD_THICK)/2
+            i += 1
 
         # Draw the cells on the Sudoku board
-        for i in range(cell_number):
-            for j in range(cell_number):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 self.cells[i][j].draw()  # Draw each cell and its value
 
     # Selects a specific cell on the board
@@ -459,9 +487,15 @@ class Board:
     # Resets the Sudoku board to its original state
     def reset_to_original(self):
         self.cells = [
-            [Cell(self.board[i][j], i, j, cell_size, cell_size, screen) for j in range(cols)]
-            for i in range(rows)
+            [Cell(self.board[i][j], i, j, cell_size, cell_size, screen) for j in range(self.cols)]
+            for i in range(self.rows)
         ]
+        for i in range(self.rows):
+            for j in range(self.cols):
+                if self.cells[i][j].value == 0:
+                    self.cells[i][j].mut = True
+                else:
+                    self.cells[i][j].mut = False
 
     # Checks if the Sudoku board is fully filled
     def is_full(self):
@@ -505,8 +539,13 @@ if __name__ == "__main__":
     
     difficulty = draw_game_start(screen)
     screen.fill(BG_COLOR)
+    pygame.display.update()
     
-    #game part of main function
+    boardObj = Board(SIZE, SIZE, WIDTH, HEIGHT, screen, difficulty)
+    print(boardObj.board)
+    boardObj.draw()
+    pygame.display.update()
+    #looped game part of main function
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
