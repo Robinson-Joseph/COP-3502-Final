@@ -3,7 +3,6 @@
 import random
 import pygame
 import sys
-import numpy as np
 
 
 class SudokuGenerator:
@@ -253,6 +252,7 @@ def generate_sudoku(size:int, removed:int) -> list[list[int]]:
 #These are globals. Do not modify unless necessary.
 BG_COLOR = "black"
 LINE_COLOR = "white"
+BORDER_COLOR = "red"
 WIDTH = 800
 HEIGHT = 600
 OUTER_BD_THICK = 15
@@ -327,28 +327,30 @@ def draw_game_start(screen):
 
 #Cell Class
 class Cell:
-    def __init__(self, value, row, col, screen=None, mut=True):
+    def __init__(self, value, row, col, screen=None, mut=2):
         self.value = value
         self.row = row
         self.col = col
         self.screen = screen
         self.mut = mut #mutability. Cells with pre-set or non-sketch values are immutable barring reset. Any cell may still be selected.
+        #mut = 2 is unsubmitted, mut = 1 is submitted, mut = 0 is preset.
         
         
     def set_cell_value(self, value):
         self.value = value
-        self.mut = False
+        self.mut = 1
         
         
     def set_sketched_value(self, value):
         self.value = value
         
-    def draw(self):
+    def draw(self, sel):
+        self.sel = sel
         correction = OUTER_BD_THICK-INNER_BD_THICK #The difference between outer and inner borders. Math reasons.
         leftBound = (self.row%9+1)*INNER_BD_THICK+(self.row%3+1)*correction+(self.row%9)*cell_size+1 #left boundary of a given cell, starting on first white space
-        rightBound = leftBound+cell_size-1 #same as above, on the right
+        # rightBound = leftBound+cell_size-1 #same as above, on the right
         upBound = (self.col%9+1)*INNER_BD_THICK+(self.col%3+1)*correction+(self.col%9)*cell_size+1 #upper bound
-        downBound = upBound+cell_size-1 #lower bound
+        # downBound = upBound+cell_size-1 #lower bound
         sketchFont = pygame.font.Font(None, 30) #sketched number size, will be changed
         cellFont = pygame.font.Font(None, 50) #submitted number size, will be changed
         
@@ -357,19 +359,43 @@ class Cell:
         upBound = correction*(self.col//3+1) + INNER_BD_THICK*(self.col+1) + cell_size*self.col
         # if event.type == pygame.MOUSEBUTTONDOWN:
         #     pygame.draw.lines(screen, 'red', True, [(leftBound, upBound), (rightBound, upBound), (rightBound, downBound), (leftBound, downBound)]) #draws a red box on the boundary of the cell
-        if self.value != 0:
-            if self.mut == False:
-                text = cellFont.render(str(self.value), 0, LINE_COLOR) #the value of the cell, as text
+
+        if self.mut < 2:
+            if sel == True:
+                border = pygame.Surface((cell_size, cell_size))
+                border.fill(BORDER_COLOR) #makes it
+                surface = pygame.Surface((cell_size-5, cell_size-5)) #creates a square to cover the old digits
+                surface.fill(BG_COLOR) #makes it 
+                border.blit(surface,(cell_size/15, cell_size/15))
+                if self.value != 0:
+                    text = cellFont.render(str(self.value), 0, LINE_COLOR) #the value of the cell, as text
+                    border.blit(text, (cell_size/3, cell_size/4)) #places the text onto a black square (the cell)
+                self.screen.blit(border, (leftBound, upBound)) #places the text, in theory. Can't verify easily tbh. 
+            else:
                 surface = pygame.Surface((cell_size, cell_size)) #creates a square to cover the old digits
-                surface.fill(BG_COLOR) #makes it black
-                surface.blit(text, (cell_size/3, cell_size/4)) #places the text onto a black square (the cell)
+                surface.fill(BG_COLOR) #makes it 
+                if self.value != 0:
+                    text = cellFont.render(str(self.value), 0, LINE_COLOR) #the value of the cell, as text
+                    surface.blit(text, (cell_size/3, cell_size/4)) #places the text onto a black square (the cell)
                 self.screen.blit(surface, (leftBound, upBound)) #places the text, in theory. Can't verify easily tbh. 
-            elif self.mut == True:
-                text = sketchFont.render(str(self.value), 0, LINE_COLOR) #the sketched value of the cell, as text
+        elif self.mut == 2:
+            if sel == True:
+                border = pygame.Surface((cell_size, cell_size))
+                border.fill(BORDER_COLOR) #makes it
+                surface = pygame.Surface((cell_size-5, cell_size-5)) #creates a square to cover the old digits
+                surface.fill(BG_COLOR) #makes it 
+                border.blit(surface,(cell_size/15, cell_size/15))
+                if self.value != 0:
+                    text = sketchFont.render(str(self.value), 0, LINE_COLOR) #the sketched value of the cell, as text
+                    border.blit(text, (cell_size/6, cell_size/8)) #places the text onto a black square (the cell)
+                self.screen.blit(border, (leftBound, upBound)) #places the text, in theory. Can't verify easily tbh. 
+            else:
                 surface = pygame.Surface((cell_size, cell_size)) #creates a square to cover the old digits
                 surface.fill(BG_COLOR) #makes it black
-                surface.blit(text, (cell_size/2, cell_size/2)) #places the text onto a black square (the cell) This is small and on the upper left, ideally
-                self.screen.blit(text, (leftBound, upBound)) #places the text 
+                if self.value != 0:
+                    text = sketchFont.render(str(self.value), 0, LINE_COLOR) #the sketched value of the cell, as text
+                    surface.blit(text, (cell_size/6, cell_size/8)) #places the text onto a black square (the cell) This is small and on the upper left, ideally
+                self.screen.blit(surface, (leftBound, upBound)) #places the text 
 
 #Board Class
 class Board:
@@ -403,9 +429,9 @@ class Board:
         for i in range(self.rows):
             for j in range(self.cols):
                 if self.cells[i][j].value == 0:
-                    self.cells[i][j].mut = True
+                    self.cells[i][j].mut = 2
                 else:
-                    self.cells[i][j].mut = False
+                    self.cells[i][j].mut = 0
 
     # Draws the Sudoku grid and its cells
     # Draws an outline of the Sudoku grid and each cell on the board
@@ -417,6 +443,7 @@ class Board:
         
         # Draw horizontal lines for the Sudoku grid
         while j < HEIGHT:
+            #Basically, due to the different border sizes, there's a different formula for each section.
             lineStart = 0, j
             lineEnd = HEIGHT-1, j
             if i%3 == 0:
@@ -451,7 +478,7 @@ class Board:
         # Draw the cells on the Sudoku board
         for i in range(self.rows):
             for j in range(self.cols):
-                self.cells[i][j].draw()  # Draw each cell and its value
+                self.cells[i][j].draw(False)  # Draw each cell and its value
 
     # Selects a specific cell on the board
     def select(self, row, col):
@@ -490,12 +517,13 @@ class Board:
             [Cell(self.board[i][j], i, j, cell_size, cell_size, screen) for j in range(self.cols)]
             for i in range(self.rows)
         ]
+        #Makes all initial sudoku values immutable.
         for i in range(self.rows):
             for j in range(self.cols):
                 if self.cells[i][j].value == 0:
-                    self.cells[i][j].mut = True
+                    self.cells[i][j].mut = 2
                 else:
-                    self.cells[i][j].mut = False
+                    self.cells[i][j].mut = 0
 
     # Checks if the Sudoku board is fully filled
     def is_full(self):
@@ -545,10 +573,88 @@ if __name__ == "__main__":
     print(boardObj.board)
     boardObj.draw()
     pygame.display.update()
+    selRow = 0
+    selCol = 0
+    oldSel = [int(9),int(9)] #the old selected value. Do not try to parse b4 changing, as it is out of bounds.
+    
     #looped game part of main function
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.display.quit()
                 sys.exit()
-
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                #This is basically a hard-coded version of the "click" function in Board.
+                if int(event.pos[0]) < HEIGHT:
+                    selRow = int(int(event.pos[0])//(HEIGHT/SIZE))
+                if int(event.pos[1]) < HEIGHT:
+                    selCol = int(int(event.pos[1])//(HEIGHT/SIZE))
+                #selects cell clicked
+                if [selRow, selCol] != oldSel:
+                    #unborders old cell
+                    if oldSel != [9,9]:
+                        boardObj.cells[oldSel[0]][oldSel[1]].draw(False)
+                    oldSel = [selRow, selCol]
+                    #re-borders new cell
+                    boardObj.select(selRow, selCol)
+                    boardObj.cells[selRow][selCol].draw(True)
+                    pygame.display.update()
+            if event.type == pygame.KEYDOWN and oldSel == [selRow, selCol]:
+                #At some point, I mixed up rows, columns, and logic. It works, so don't mess with it. Consistency > Accuracy.
+                keyInput = pygame.key.get_pressed()
+                if (keyInput[pygame.K_UP] or keyInput[pygame.K_w]) and selCol != 0: #Upwards Movement
+                    selCol += -1 #changes the selected column in the direction of movement.
+                    boardObj.cells[oldSel[0]][oldSel[1]].draw(False)
+                    oldSel = [selRow, selCol]
+                    boardObj.select(selRow, selCol)
+                    # boardObj.cells[selRow][selCol].draw(True)
+                elif (keyInput[pygame.K_DOWN] or keyInput[pygame.K_s]) and selCol != 8: #Downwards Movement
+                    selCol += 1
+                    boardObj.cells[oldSel[0]][oldSel[1]].draw(False)
+                    oldSel = [selRow, selCol]
+                    boardObj.select(selRow, selCol)
+                    # boardObj.cells[selRow][selCol].draw(True)
+                elif (keyInput[pygame.K_RIGHT] or keyInput[pygame.K_s]) and selRow != 8: #Leftwards Movement
+                    selRow += 1
+                    boardObj.cells[oldSel[0]][oldSel[1]].draw(False)
+                    oldSel = [selRow, selCol]
+                    boardObj.select(selRow, selCol)
+                    # boardObj.cells[selRow][selCol].draw(True)
+                elif (keyInput[pygame.K_LEFT] or keyInput[pygame.K_s]) and selRow != 0: #Rightwards Movement
+                    selRow += -1
+                    boardObj.cells[oldSel[0]][oldSel[1]].draw(False)
+                    oldSel = [selRow, selCol]
+                    boardObj.select(selRow, selCol)
+                    # boardObj.cells[selRow][selCol].draw(True)
+                #Number inputs. At this point, I probably should have used a switch. Oh well.
+                elif (keyInput[pygame.K_1] or keyInput[pygame.K_KP1]) and boardObj.cells[selRow][selCol].mut == 2:
+                    boardObj.sketch(1)
+                elif (keyInput[pygame.K_2] or keyInput[pygame.K_KP2]) and boardObj.cells[selRow][selCol].mut == 2:
+                    boardObj.sketch(2)
+                elif (keyInput[pygame.K_3] or keyInput[pygame.K_KP3]) and boardObj.cells[selRow][selCol].mut == 2:
+                    boardObj.sketch(3)
+                elif (keyInput[pygame.K_4] or keyInput[pygame.K_KP4]) and boardObj.cells[selRow][selCol].mut == 2:
+                    boardObj.sketch(4)
+                elif (keyInput[pygame.K_5] or keyInput[pygame.K_KP5]) and boardObj.cells[selRow][selCol].mut == 2:
+                    boardObj.sketch(5)
+                elif (keyInput[pygame.K_6] or keyInput[pygame.K_KP6]) and boardObj.cells[selRow][selCol].mut == 2:
+                    boardObj.sketch(6)
+                elif (keyInput[pygame.K_7] or keyInput[pygame.K_KP7]) and boardObj.cells[selRow][selCol].mut == 2:
+                    boardObj.sketch(7)
+                elif (keyInput[pygame.K_8] or keyInput[pygame.K_KP8]) and boardObj.cells[selRow][selCol].mut == 2:
+                    boardObj.sketch(8)
+                elif (keyInput[pygame.K_9] or keyInput[pygame.K_KP9]) and boardObj.cells[selRow][selCol].mut == 2:
+                    boardObj.sketch(9)
+                #The Enter button, which writes the values.
+                elif (keyInput[pygame.K_RETURN] or keyInput[pygame.K_KP_ENTER]) and boardObj.cells[selRow][selCol].mut == 2:
+                    boardObj.place_number(boardObj.cells[selRow][selCol].value)
+                    boardObj.cells[selRow][selCol].mut = 1
+                #The backspace OR delete key, which deletes the values.
+                elif(keyInput[pygame.K_BACKSPACE] or keyInput[pygame.K_DELETE]) and boardObj.cells[selRow][selCol].mut != 0:
+                    boardObj.cells[selRow][selCol].value = 0
+                    boardObj.cells[selRow][selCol].mut = 2
+                boardObj.update_board()
+                boardObj.cells[selRow][selCol].draw(True)
+                pygame.display.update()
+                    
+                    
