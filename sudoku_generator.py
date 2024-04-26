@@ -3,6 +3,7 @@
 import random
 import pygame
 import sys
+import time
 
 
 class SudokuGenerator:
@@ -513,17 +514,21 @@ class Board:
 
     # Resets the Sudoku board to its original state
     def reset_to_original(self):
-        self.cells = [
-            [Cell(self.board[i][j], i, j, cell_size, cell_size, screen) for j in range(self.cols)]
-            for i in range(self.rows)
-        ]
-        #Makes all initial sudoku values immutable.
         for i in range(self.rows):
             for j in range(self.cols):
-                if self.cells[i][j].value == 0:
-                    self.cells[i][j].mut = 2
-                else:
-                    self.cells[i][j].mut = 0
+                if self.cells[i][j].mut != 0:
+                    self.clear()
+        # self.cells = [
+        #     [Cell(self.board[i][j], i, j, cell_size, cell_size, self.screen) for j in range(self.cols)]
+        #     for i in range(self.rows)
+        # ]
+        # #Makes all initial sudoku values immutable.
+        # for i in range(self.rows):
+        #     for j in range(self.cols):
+        #         if self.cells[i][j].value == 0:
+        #             self.cells[i][j].mut = 2
+        #         else:
+        #             self.cells[i][j].mut = 0
 
     # Checks if the Sudoku board is fully filled
     def is_full(self):
@@ -557,9 +562,11 @@ class Board:
         # Compare with the solution from SudokuGenerator
         return self.sudoku.solution == current_board
 
-
-#main here
-if __name__ == "__main__":
+   
+    
+#main definition
+def main():
+    restart = False
     gameOver = False
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -572,23 +579,59 @@ if __name__ == "__main__":
     boardObj = Board(SIZE, SIZE, WIDTH, HEIGHT, screen, difficulty)
     print(boardObj.board)
     boardObj.draw()
-    pygame.display.update()
+
     selRow = 0
     selCol = 0
     oldSel = [int(9),int(9)] #the old selected value. Do not try to parse b4 changing, as it is out of bounds.
     
+    #Draws the buttons on the right side: Reset, Restart, Quit. Also puts a game name.
+    #game name on side
+    gameTitleFont = pygame.font.Font(None, 70)
+    gameButtonFont = pygame.font.Font(None, 65)
+    titleSurface = gameTitleFont.render("Sudoku", 0, LINE_COLOR)
+    titleRectangle = titleSurface.get_rect(center=((WIDTH-HEIGHT)/2+HEIGHT, HEIGHT*(300-180)/600))            
+    screen.blit(titleSurface, titleRectangle)
+    
+    #Button text
+    resetText = gameButtonFont.render("Reset", 0, (0,0,0))
+    restartText = gameButtonFont.render("Restart", 0, (0,0,0))
+    quitText = gameButtonFont.render("Quit", 0, (0,0,0))
+    
+    #Button buttons
+    resetSurface = pygame.Surface((resetText.get_size()[0]+20, resetText.get_size()[1]+20))
+    resetSurface.fill(LINE_COLOR)
+    resetSurface.blit(resetText, (10,10))
+    restartSurface = pygame.Surface((restartText.get_size()[0]+20, restartText.get_size()[1]+20))
+    restartSurface.fill(LINE_COLOR)
+    restartSurface.blit(restartText, (10,10))
+    quitSurface = pygame.Surface((quitText.get_size()[0]+20, quitText.get_size()[1]+20))
+    quitSurface.fill(LINE_COLOR)
+    quitSurface.blit(quitText, (10,10))
+    
+    #button positioning
+    resetRectangle = resetSurface.get_rect(center=((WIDTH-HEIGHT)/2+HEIGHT, HEIGHT*(300-50)/600))   
+    restartRectangle = restartSurface.get_rect(center=((WIDTH-HEIGHT)/2+HEIGHT, HEIGHT*(300+45)/600))   
+    quitRectangle = quitSurface.get_rect(center=((WIDTH-HEIGHT)/2+HEIGHT, HEIGHT*(300+140)/600))   
+    
+    #place buttons on the screen
+    screen.blit(resetSurface, resetRectangle)
+    screen.blit(restartSurface, restartRectangle)
+    screen.blit(quitSurface, quitRectangle)
+     
+    pygame.display.update()
+
     #looped game part of main function
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.display.quit()
                 sys.exit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN and not gameOver:
                 #This is basically a hard-coded version of the "click" function in Board.
                 if int(event.pos[0]) < HEIGHT:
                     selRow = int(int(event.pos[0])//(HEIGHT/SIZE))
-                if int(event.pos[1]) < HEIGHT:
-                    selCol = int(int(event.pos[1])//(HEIGHT/SIZE))
+                    if int(event.pos[1]) < HEIGHT:
+                        selCol = int(int(event.pos[1])//(HEIGHT/SIZE))
                 #selects cell clicked
                 if [selRow, selCol] != oldSel:
                     #unborders old cell
@@ -599,6 +642,22 @@ if __name__ == "__main__":
                     boardObj.select(selRow, selCol)
                     boardObj.cells[selRow][selCol].draw(True)
                     pygame.display.update()
+                if resetRectangle.collidepoint(event.pos):
+                    for i in range(SIZE):
+                        for j in range(SIZE):
+                            if boardObj.cells[i][j].mut != 0:
+                                boardObj.cells[i][j].value = 0
+                                boardObj.cells[i][j].mut = 2
+                                boardObj.cells[i][j].draw(False)
+                    boardObj.update_board()
+                    pygame.display.update()
+                    # boardObj.reset_to_original()
+                elif restartRectangle.collidepoint(event.pos):
+                    restart = True
+                elif quitRectangle.collidepoint(event.pos):
+                    pygame.display.quit()
+                    sys.exit() #take a wild guess
+                time.sleep(0.01)
             if event.type == pygame.KEYDOWN and oldSel == [selRow, selCol]:
                 #At some point, I mixed up rows, columns, and logic. It works, so don't mess with it. Consistency > Accuracy.
                 keyInput = pygame.key.get_pressed()
@@ -656,5 +715,10 @@ if __name__ == "__main__":
                 boardObj.update_board()
                 boardObj.cells[selRow][selCol].draw(True)
                 pygame.display.update()
-                    
-                    
+                time.sleep(0.01)
+        if restart:
+            break
+#main here
+if __name__ == "__main__":
+    while True:
+        main()
