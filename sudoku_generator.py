@@ -103,7 +103,6 @@ class SudokuGenerator:
             for col in range(col_start, col_start+self.box_length):
                 if self.board[row][col] == num:
                     return False
-            print()
         return True
 
 
@@ -155,7 +154,6 @@ class SudokuGenerator:
         """
         for i in range(0, self.row_length//self.box_length):
             self.fill_box(i*self.box_length, i*self.box_length)
-        self.print_board()
         return
 
 
@@ -218,7 +216,6 @@ class SudokuGenerator:
         while count < self.removed_cells:
             rand_row = random.randint(1,self.row_length-1)
             rand_col = random.randint(1, self.row_length-1)
-            #print(f"Removing cell at {rand_row}, {rand_col} value: {self.board[rand_row][rand_col]}")
             if self.board[rand_row][rand_col] != 0:
                 self.board[rand_row][rand_col] = 0
                 count += 1
@@ -251,29 +248,30 @@ def generate_sudoku(size:int, removed:int) -> list[list[int]]:
 
 #Visual stuff starts 
 #These are globals. Do not modify unless necessary.
-BG_COLOR = "black"
-LINE_COLOR = "white"
-BORDER_COLOR = "red"
-WIDTH = 800
-HEIGHT = 600
-OUTER_BD_THICK = 15
-INNER_BD_THICK = 9
-SIZE = 9 #size of the sudoku game
-cell_size = (HEIGHT-4*OUTER_BD_THICK-6*INNER_BD_THICK)/9
+BG_COLOR = "black" #global background color (and text on button color)
+LINE_COLOR = "white" #global line color (and button color)
+BORDER_COLOR = "red" #global highlighted cell color
+WIDTH = 800 #global window width (in pixels)
+HEIGHT = 600 #global window height (in pixels)
+OUTER_BD_THICK = 15 #global sudoku outer-boundary thickness (in pixels). Like, the 3x3 squares.
+INNER_BD_THICK = 9 #global sudoku gridline thickness (in pixels)
+SIZE = 9 #the size (row length in cells) of the sudoku game
+cell_size = (HEIGHT-4*OUTER_BD_THICK-6*INNER_BD_THICK)/9 #the pixel width of the cells
 
 
 def draw_game_start(screen):
+    #This function draws the start screen. Its only parameter is screen, which is the display screen.
     #Title Font init
-    startTitleFont = pygame.font.Font(None, 100)
+    startTitleFont = pygame.font.Font(None, 100)#font type and size
     buttonFont = pygame.font.Font(None, 70)
     #Background Color
     screen.fill(BG_COLOR)
 
     #Title draw and init
-    titleSurface = startTitleFont.render("Sudoku", 0, LINE_COLOR)
+    titleSurface = startTitleFont.render("Sudoku", 0, LINE_COLOR) #the title text
     titleRectangle = titleSurface.get_rect(
-        center=(WIDTH//2, HEIGHT//2 - 180/600*HEIGHT))
-    screen.blit(titleSurface, titleRectangle)
+        center=(WIDTH//2, HEIGHT//2 - 180/600*HEIGHT)) #This is the position of the title text
+    screen.blit(titleSurface, titleRectangle) #places it on the screen
 
     #Buttons init
 
@@ -282,19 +280,26 @@ def draw_game_start(screen):
     hardText = buttonFont.render("Hard", 0, (143, 22, 22))
     quitText = buttonFont.render("Quit", 0, (0, 0, 0))
 
+    #Sets up each button shape and color based on the text it contains.
+    #easy button
     easySurface = pygame.Surface((easyText.get_size()[0]+20, easyText.get_size()[1]+20))
     easySurface.fill(LINE_COLOR)
     easySurface.blit(easyText, (10, 10))
+    #medium button
     mediumSurface = pygame.Surface((mediumText.get_size()[0]+20, mediumText.get_size()[1]+20))
     mediumSurface.fill(LINE_COLOR)
     mediumSurface.blit(mediumText, (10, 10))
+    #hard button
     hardSurface = pygame.Surface((hardText.get_size()[0]+20, hardText.get_size()[1]+20))
     hardSurface.fill(LINE_COLOR)
     hardSurface.blit(hardText, (10, 10))
+    #quit button
     quitSurface = pygame.Surface((quitText.get_size()[0]+20, quitText.get_size()[1]+20))
     quitSurface.fill(LINE_COLOR)
     quitSurface.blit(quitText, (10, 10))
-
+    
+    #these are the positions for the buttons.
+    #they are written as ratios to the globals for screen height and width.
     easyRectangle = easySurface.get_rect(
         center=(WIDTH//2, HEIGHT//2-50/600*HEIGHT))
     mediumRectangle = easySurface.get_rect(
@@ -303,7 +308,8 @@ def draw_game_start(screen):
         center=(WIDTH//2-(hardText.get_size()[0]-easyText.get_size()[0])/2, HEIGHT//2+140/600*HEIGHT))
     quitRectangle = quitSurface.get_rect(
         center=(WIDTH//2, HEIGHT//2+235/600*HEIGHT))
-
+    
+    #this places the buttons on the screen.
     screen.blit(easySurface, easyRectangle)
     screen.blit(mediumSurface, mediumRectangle)
     screen.blit(hardSurface, hardRectangle)
@@ -329,6 +335,10 @@ def draw_game_start(screen):
 #Cell Class
 class Cell:
     def __init__(self, value, row, col, screen=None, mut=2):
+        #Cell class
+        #takes a value, row, column, screen, and mutability as parameters
+        #most are self explanatory
+        #everything except for screen are integers.
         self.value = value
         self.row = row
         self.col = col
@@ -338,64 +348,62 @@ class Cell:
         
         
     def set_cell_value(self, value):
+        #When you hit enter after sketching a value to a cell. "locks" that value.
         self.value = value
         self.mut = 1
         
         
     def set_sketched_value(self, value):
+        #Sketches a cell value. in main, it can't be done to a cell unless cell.mut == 2
         self.value = value
         
     def draw(self, sel):
-        self.sel = sel
-        correction = OUTER_BD_THICK-INNER_BD_THICK #The difference between outer and inner borders. Math reasons.
-        leftBound = (self.row%9+1)*INNER_BD_THICK+(self.row%3+1)*correction+(self.row%9)*cell_size+1 #left boundary of a given cell, starting on first white space
-        # rightBound = leftBound+cell_size-1 #same as above, on the right
-        upBound = (self.col%9+1)*INNER_BD_THICK+(self.col%3+1)*correction+(self.col%9)*cell_size+1 #upper bound
-        # downBound = upBound+cell_size-1 #lower bound
-        sketchFont = pygame.font.Font(None, 30) #sketched number size, will be changed
-        cellFont = pygame.font.Font(None, 50) #submitted number size, will be changed
-        
-        correction = OUTER_BD_THICK - INNER_BD_THICK
-        leftBound = correction*(self.row//3+1) + INNER_BD_THICK*(self.row+1) + cell_size*self.row
-        upBound = correction*(self.col//3+1) + INNER_BD_THICK*(self.col+1) + cell_size*self.col
-        # if event.type == pygame.MOUSEBUTTONDOWN:
-        #     pygame.draw.lines(screen, 'red', True, [(leftBound, upBound), (rightBound, upBound), (rightBound, downBound), (leftBound, downBound)]) #draws a red box on the boundary of the cell
+        #takes a new attriute, sel, as a parameter
+        self.sel = sel #sel is a boolean that refers to whether the cell is selected or not.
 
-        if self.mut < 2:
-            if sel == True:
-                border = pygame.Surface((cell_size, cell_size))
-                border.fill(BORDER_COLOR) #makes it
-                surface = pygame.Surface((cell_size-5, cell_size-5)) #creates a square to cover the old digits
-                surface.fill(BG_COLOR) #makes it 
-                border.blit(surface,(cell_size/15, cell_size/15))
+        sketchFont = pygame.font.Font(None, 30) #sketched number size
+        cellFont = pygame.font.Font(None, 50) #submitted number size
+        
+        correction = OUTER_BD_THICK - INNER_BD_THICK #This is just a mathematical intermediate. Less clutter.
+        leftBound = correction*(self.row//3+1) + INNER_BD_THICK*(self.row+1) + cell_size*self.row #left boundary for a cell
+        upBound = correction*(self.col//3+1) + INNER_BD_THICK*(self.col+1) + cell_size*self.col #upper boundary for a cell
+
+        if self.mut < 2: #if the cell is not sketchable.
+            if sel == True: #if the cell is selected, it will border it in red. Otherwise, does the same thing as the other option.
+                border = pygame.Surface((cell_size, cell_size)) #creates a box
+                border.fill(BORDER_COLOR) #colors it red
+                surface = pygame.Surface((cell_size-5, cell_size-5)) #Creates a smaller box for the digit to be written on
+                surface.fill(BG_COLOR) #colors it black
+                border.blit(surface,(cell_size/15, cell_size/15)) #places the black box on the red box, creating a red selection square.
                 if self.value != 0:
                     text = cellFont.render(str(self.value), 0, LINE_COLOR) #the value of the cell, as text
                     border.blit(text, (cell_size/3, cell_size/4)) #places the text onto a black square (the cell)
-                self.screen.blit(border, (leftBound, upBound)) #places the text, in theory. Can't verify easily tbh. 
-            else:
+                self.screen.blit(border, (leftBound, upBound)) #places the text, in theory.
+            else: #This is if it's not selected
                 surface = pygame.Surface((cell_size, cell_size)) #creates a square to cover the old digits
-                surface.fill(BG_COLOR) #makes it 
+                surface.fill(BG_COLOR) #colors it black
                 if self.value != 0:
                     text = cellFont.render(str(self.value), 0, LINE_COLOR) #the value of the cell, as text
                     surface.blit(text, (cell_size/3, cell_size/4)) #places the text onto a black square (the cell)
-                self.screen.blit(surface, (leftBound, upBound)) #places the text, in theory. Can't verify easily tbh. 
-        elif self.mut == 2:
+                self.screen.blit(surface, (leftBound, upBound)) #places the text. 
+                
+        elif self.mut == 2: #if the cell is sketchable. Same as above, but the number is smaller and in the upper-right corner.
             if sel == True:
                 border = pygame.Surface((cell_size, cell_size))
-                border.fill(BORDER_COLOR) #makes it
-                surface = pygame.Surface((cell_size-5, cell_size-5)) #creates a square to cover the old digits
-                surface.fill(BG_COLOR) #makes it 
+                border.fill(BORDER_COLOR) 
+                surface = pygame.Surface((cell_size-5, cell_size-5))
+                surface.fill(BG_COLOR)
                 border.blit(surface,(cell_size/15, cell_size/15))
                 if self.value != 0:
-                    text = sketchFont.render(str(self.value), 0, LINE_COLOR) #the sketched value of the cell, as text
-                    border.blit(text, (cell_size/6, cell_size/8)) #places the text onto a black square (the cell)
-                self.screen.blit(border, (leftBound, upBound)) #places the text, in theory. Can't verify easily tbh. 
+                    text = sketchFont.render(str(self.value), 0, LINE_COLOR) #here, the font for the text is notably smaller.
+                    border.blit(text, (cell_size/6, cell_size/8)) #The text is on the upper left now.
+                self.screen.blit(border, (leftBound, upBound)) 
             else:
-                surface = pygame.Surface((cell_size, cell_size)) #creates a square to cover the old digits
-                surface.fill(BG_COLOR) #makes it black
+                surface = pygame.Surface((cell_size, cell_size))
+                surface.fill(BG_COLOR)
                 if self.value != 0:
-                    text = sketchFont.render(str(self.value), 0, LINE_COLOR) #the sketched value of the cell, as text
-                    surface.blit(text, (cell_size/6, cell_size/8)) #places the text onto a black square (the cell) This is small and on the upper left, ideally
+                    text = sketchFont.render(str(self.value), 0, LINE_COLOR) #the sketched value of the cell, as text. Again, usess the smaller text.
+                    surface.blit(text, (cell_size/6, cell_size/8)) #places the text onto a black square (the cell) This is small and on the upper left
                 self.screen.blit(surface, (leftBound, upBound)) #places the text 
 
 #Board Class
@@ -514,21 +522,10 @@ class Board:
 
     # Resets the Sudoku board to its original state
     def reset_to_original(self):
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if self.cells[i][j].mut != 0:
-                    self.clear()
-        # self.cells = [
-        #     [Cell(self.board[i][j], i, j, cell_size, cell_size, self.screen) for j in range(self.cols)]
-        #     for i in range(self.rows)
-        # ]
-        # #Makes all initial sudoku values immutable.
-        # for i in range(self.rows):
-        #     for j in range(self.cols):
-        #         if self.cells[i][j].value == 0:
-        #             self.cells[i][j].mut = 2
-        #         else:
-        #             self.cells[i][j].mut = 0
+        self.cells = [
+            [Cell(self.board[i][j], i, j, cell_size, cell_size, self.screen) for j in range(self.cols)]
+            for i in range(self.rows)
+        ]
 
     # Checks if the Sudoku board is fully filled
     def is_full(self):
@@ -556,18 +553,23 @@ class Board:
 
     # Checks whether the Sudoku board is solved correctly
     def check_board(self):
-        # Create a string representation of the current Sudoku board
-        current_board = ''.join(str(self.board[i][j]) for i in range(self.rows) for j in range(self.cols))
-
-        # Compare with the solution from SudokuGenerator
-        return self.sudoku.solution == current_board
+        
+        for i in range(SIZE):
+            for j in range(SIZE):
+                temp = self.board[i][j] #placeholder for the current value due to how is_valid works
+                self.board[i][j] = 0 #temporarily sets the val to zero
+                if not self.sudoku.is_valid(i, j, temp): #chacks a cell for validity
+                    return False #if the solution is not valid
+                self.board[i][j] = temp #resets cell value to previous.
+        return True #If the board solution is valid
 
    
     
 #main definition
 def main():
     restart = False
-    gameOver = False
+    win = False
+    loss = False
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Sudoku")
@@ -577,7 +579,6 @@ def main():
     pygame.display.update()
     
     boardObj = Board(SIZE, SIZE, WIDTH, HEIGHT, screen, difficulty)
-    print(boardObj.board)
     boardObj.draw()
 
     selRow = 0
@@ -585,6 +586,7 @@ def main():
     oldSel = [int(9),int(9)] #the old selected value. Do not try to parse b4 changing, as it is out of bounds.
     
     #Draws the buttons on the right side: Reset, Restart, Quit. Also puts a game name.
+    #It functions almost identically to the 
     #game name on side
     gameTitleFont = pygame.font.Font(None, 70)
     gameButtonFont = pygame.font.Font(None, 65)
@@ -598,12 +600,15 @@ def main():
     quitText = gameButtonFont.render("Quit", 0, (0,0,0))
     
     #Button buttons
+    #reset button
     resetSurface = pygame.Surface((resetText.get_size()[0]+20, resetText.get_size()[1]+20))
     resetSurface.fill(LINE_COLOR)
     resetSurface.blit(resetText, (10,10))
+    #restart button
     restartSurface = pygame.Surface((restartText.get_size()[0]+20, restartText.get_size()[1]+20))
     restartSurface.fill(LINE_COLOR)
     restartSurface.blit(restartText, (10,10))
+    #quit button
     quitSurface = pygame.Surface((quitText.get_size()[0]+20, quitText.get_size()[1]+20))
     quitSurface.fill(LINE_COLOR)
     quitSurface.blit(quitText, (10,10))
@@ -623,15 +628,19 @@ def main():
     #looped game part of main function
     while True:
         for event in pygame.event.get():
+            
+            #Manual quit failsafe
             if event.type == pygame.QUIT:
                 pygame.display.quit()
                 sys.exit()
-            if event.type == pygame.MOUSEBUTTONDOWN and not gameOver:
-                #This is basically a hard-coded version of the "click" function in Board.
+                
+            
+            if event.type == pygame.MOUSEBUTTONDOWN: #basically all click actions.
+                #This is basically a hard-coded version of the suggested "click" function in Board.
                 if int(event.pos[0]) < HEIGHT:
                     selRow = int(int(event.pos[0])//(HEIGHT/SIZE))
                     if int(event.pos[1]) < HEIGHT:
-                        selCol = int(int(event.pos[1])//(HEIGHT/SIZE))
+                        selCol = int(int(event.pos[1])//(HEIGHT/SIZE))       
                 #selects cell clicked
                 if [selRow, selCol] != oldSel:
                     #unborders old cell
@@ -642,25 +651,33 @@ def main():
                     boardObj.select(selRow, selCol)
                     boardObj.cells[selRow][selCol].draw(True)
                     pygame.display.update()
-                if resetRectangle.collidepoint(event.pos):
+                #This section is for clicking one of the three side buttons
+                
+                if resetRectangle.collidepoint(event.pos): #if reset is clicked
                     for i in range(SIZE):
                         for j in range(SIZE):
-                            if boardObj.cells[i][j].mut != 0:
-                                boardObj.cells[i][j].value = 0
-                                boardObj.cells[i][j].mut = 2
-                                boardObj.cells[i][j].draw(False)
+                            if boardObj.cells[i][j].mut != 0: #checks the mutability values of every cell to see if they are permanent (0) or not.
+                                boardObj.cells[i][j].value = 0 #If one cell is mutable, resets the cell.
+                                boardObj.cells[i][j].mut = 2 
+                                boardObj.cells[i][j].draw(False) #redraws the cell without a selection border
+                    #This redraws the board
                     boardObj.update_board()
                     pygame.display.update()
-                    # boardObj.reset_to_original()
-                elif restartRectangle.collidepoint(event.pos):
-                    restart = True
-                elif quitRectangle.collidepoint(event.pos):
-                    pygame.display.quit()
-                    sys.exit() #take a wild guess
-                time.sleep(0.01)
+                    
+                elif restartRectangle.collidepoint(event.pos): #if restart is clicked
+                    restart = True #sets "restart" to true, which will later end the while True loop, causing the main function to reset.
+                    
+                elif quitRectangle.collidepoint(event.pos): #if quit is clicked
+                    pygame.display.quit() #closes the display
+                    sys.exit() #closes the application
+                    
+                time.sleep(0.01) #buffers inputs for stability
+             
+            #For all key inputs
             if event.type == pygame.KEYDOWN and oldSel == [selRow, selCol]:
-                #At some point, I mixed up rows, columns, and logic. It works, so don't mess with it. Consistency > Accuracy.
-                keyInput = pygame.key.get_pressed()
+                #At some point, I mixed up rows, columns, and logic. It works, so don't mess with it. Consistency > Accuracy. Just be aware when editing.
+                keyInput = pygame.key.get_pressed() #records the key that's pressed
+                #Movement inputs. Uses either WASD or arrow keys.
                 if (keyInput[pygame.K_UP] or keyInput[pygame.K_w]) and selCol != 0: #Upwards Movement
                     selCol += -1 #changes the selected column in the direction of movement.
                     boardObj.cells[oldSel[0]][oldSel[1]].draw(False)
@@ -687,7 +704,7 @@ def main():
                     # boardObj.cells[selRow][selCol].draw(True)
                 #Number inputs. At this point, I probably should have used a switch. Oh well.
                 elif (keyInput[pygame.K_1] or keyInput[pygame.K_KP1]) and boardObj.cells[selRow][selCol].mut == 2:
-                    boardObj.sketch(1)
+                    boardObj.sketch(1) #Input 1 , all others follow same logic. Reads either numpad or normal number key.
                 elif (keyInput[pygame.K_2] or keyInput[pygame.K_KP2]) and boardObj.cells[selRow][selCol].mut == 2:
                     boardObj.sketch(2)
                 elif (keyInput[pygame.K_3] or keyInput[pygame.K_KP3]) and boardObj.cells[selRow][selCol].mut == 2:
@@ -704,20 +721,79 @@ def main():
                     boardObj.sketch(8)
                 elif (keyInput[pygame.K_9] or keyInput[pygame.K_KP9]) and boardObj.cells[selRow][selCol].mut == 2:
                     boardObj.sketch(9)
-                #The Enter button, which writes the values.
+                #The Enter button, which writes the values. Reads either numpad or normal enter (return) keys
                 elif (keyInput[pygame.K_RETURN] or keyInput[pygame.K_KP_ENTER]) and boardObj.cells[selRow][selCol].mut == 2:
                     boardObj.place_number(boardObj.cells[selRow][selCol].value)
                     boardObj.cells[selRow][selCol].mut = 1
-                #The backspace OR delete key, which deletes the values.
+                #The backspace OR delete key, which deletes the values. Reads either backspace or delete keys.
                 elif(keyInput[pygame.K_BACKSPACE] or keyInput[pygame.K_DELETE]) and boardObj.cells[selRow][selCol].mut != 0:
                     boardObj.cells[selRow][selCol].value = 0
                     boardObj.cells[selRow][selCol].mut = 2
+                #at the end of every loop, the stored array value for the board is updated
                 boardObj.update_board()
+                #Then, the image to display is updated. Technically, there can be issues with only updating the selected value.
+                #To try and mitigate issues, a delay (sleep) is used further below to limit issues.
                 boardObj.cells[selRow][selCol].draw(True)
+                #Finally, the screen is properly updated.
                 pygame.display.update()
-                time.sleep(0.01)
-        if restart:
+                time.sleep(0.01) #stability buffer
+        if restart: #If restart is true from the restart button, ends the while loop, effectively resetting main.
             break
+        #This section checks to see if the board is fully filled.
+        sumMut = 0 #This value is the sum of cells.mut values. If it is equal to the missing cells, where mut = 1 is the minimum non-prefilled cell mut value, then the board is filled.
+        for i in range(SIZE):
+            for j in range(SIZE):
+                sumMut += int(boardObj.cells[i][j].mut) #sums mutability values
+        if sumMut == int(difficulty):
+            if boardObj.check_board(): #this checks the current board to see if it is valid. If it is, you win. If not, you lose.
+                win = True
+            else:
+                loss = True
+            break #ends the loop after setting win or loss to true. Instead of skipping to the beginning of main, it gets stuck in a new loop for the win/loss screen.
+            
+    if win or loss: #this stays the same, regardless of win or loss (but one must be true). Baseline for the win/loss screen.
+        #Background Color
+        screen.fill(BG_COLOR)
+        #Font
+        wlButtonFont = pygame.font.Font(None, 70)
+        #button text
+        restartText = wlButtonFont.render("Restart", 0, (0,0,0))
+        #restart button creation
+        restartSurface = pygame.Surface((restartText.get_size()[0]+20, restartText.get_size()[1]+20))
+        restartSurface.fill(LINE_COLOR)
+        restartSurface.blit(restartText, (10,10))
+        #restart button position
+        restartRectangle = restartSurface.get_rect(center=(WIDTH/2, (300+235)/600*HEIGHT))
+        #place restart button
+        screen.blit(restartSurface, restartRectangle)
+    if win: #win text
+        #Fonts
+        winTitleFont = pygame.font.Font(None, 120)
+
+        #Text placement
+        titleSurface = winTitleFont.render("YOU WON!!!!!", 0, LINE_COLOR)
+        titleRectangle = titleSurface.get_rect(center =(WIDTH/2,HEIGHT*(300-180)/600))
+        screen.blit(titleSurface, titleRectangle)
+    elif loss: #loss text 
+        #Fonts
+        lossTitleFont = pygame.font.Font(None, 120)
+        #text placement
+        titleSurface = lossTitleFont.render("You Lost....", 0, LINE_COLOR)
+        titleRectangle = titleSurface.get_rect(center =(WIDTH/2,HEIGHT*(300-180)/600))
+        screen.blit(titleSurface, titleRectangle)
+    pygame.display.update() #updates the screen.
+
+    while True: #looping for the win/loss screen. Basically, keeps the screen there until restart is hit.
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: #Manual quit failsafe
+                pygame.display.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN: #basically all click actions.
+                if restartRectangle.collidepoint(event.pos): #if restart is clicked
+                    restart = True #sets "restart" to true, which will later end the while True loop, causing the main function to reset.
+        if restart: #If restart is true from the restart button, ends the while loop, effectively resetting main.
+            break
+    
 #main here
 if __name__ == "__main__":
     while True:
