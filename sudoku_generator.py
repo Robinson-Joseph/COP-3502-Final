@@ -1,11 +1,9 @@
-# Joseph Robinson, 4/9/2024, generator for backend of sudoku game project.
-
 import random
 import pygame
 import sys
 import time
 
-
+# Joseph Robinson, 4/9/2024, generator for backend of sudoku game project.
 class SudokuGenerator:
     """A class with methods related to sudoku Generation
 
@@ -246,8 +244,8 @@ def generate_sudoku(size:int, removed:int) -> list[list[int]]:
     return board # function description incorrect, this only returns the unsolved board. - Joseph
 
 
-#Visual stuff starts 
-#These are globals. Do not modify unless necessary.
+#Visual stuff starts Justice Benton did this too
+#These are globals. Do not modify unless necessary. 
 BG_COLOR = "black" #global background color (and text on button color)
 LINE_COLOR = "white" #global line color (and button color)
 BORDER_COLOR = "red" #global highlighted cell color
@@ -259,7 +257,7 @@ SIZE = 9 #the size (row length in cells) of the sudoku game
 cell_size = (HEIGHT-4*OUTER_BD_THICK-6*INNER_BD_THICK)/9 #the pixel width of the cells
 
 
-def draw_game_start(screen):
+def draw_game_start(screen): #Justice Benton - Start Screen last edited 23 Apr 2024
     #This function draws the start screen. Its only parameter is screen, which is the display screen.
     #Title Font init
     startTitleFont = pygame.font.Font(None, 100)#font type and size
@@ -333,7 +331,7 @@ def draw_game_start(screen):
         pygame.display.update()
 
 #Cell Class
-class Cell:
+class Cell: #Justice Benton - Cell Class last edited 25 Apr 2024
     def __init__(self, value, row, col, screen=None, mut=2):
         #Cell class
         #takes a value, row, column, screen, and mutability as parameters
@@ -444,7 +442,7 @@ class Board:
 
     # Draws the Sudoku grid and its cells
     # Draws an outline of the Sudoku grid and each cell on the board
-    def draw(self):
+    def draw(self): #Justice Benton - Board Class GFX Rewrite (nonfunctional prior) last edited 26 Apr 2024
         self.screen.fill(BG_COLOR)  # Fill the background
         
         i = 0
@@ -552,7 +550,7 @@ class Board:
         return None
 
     # Checks whether the Sudoku board is solved correctly
-    def check_board(self):
+    def check_board(self): #Justice Benton - Board Verifier Rewrite (nonfunctional prior) last edited 26 Apr 2024
         
         for i in range(SIZE):
             for j in range(SIZE):
@@ -566,7 +564,7 @@ class Board:
    
     
 #main definition
-def main():
+def main(): #Justice Benton - Main last edited 26 Apr 2024
     restart = False
     win = False
     loss = False
